@@ -17,7 +17,7 @@ export interface AnalyticsResponse {
     dateRange: 'today' | 'yesterday' | '7days' | '30days' | '90days' | '12months';
     limit?: number;
   };
-  data: any;
+  data: Record<string, unknown>;
   timestamp: string;
 }
 
@@ -145,7 +145,7 @@ export class AnalyticsClient {
     }
   }
 
-  private formatSummaryResponse(data: any, dateRange: string): string {
+  private formatSummaryResponse(data: Record<string, unknown>, dateRange: string): string {
     const { metrics, dateRange: { startDate, endDate } } = data;
     
     const dateRangeText = this.formatDateRange(dateRange, startDate, endDate);
@@ -169,7 +169,7 @@ export class AnalyticsClient {
 This gives you a solid overview of how your site is performing overall!`;
   }
 
-  private formatPagesResponse(data: any, dateRange: string): string {
+  private formatPagesResponse(data: Record<string, unknown>, dateRange: string): string {
     const { pages, dateRange: { startDate, endDate } } = data;
     
     if (!pages || pages.length === 0) {
@@ -180,7 +180,7 @@ This gives you a solid overview of how your site is performing overall!`;
     
     let response = `📄 **Top Performing Pages** ${dateRangeText}\n\n`;
     
-    pages.slice(0, 5).forEach((page: any, index: number) => {
+    pages.slice(0, 5).forEach((page: Record<string, unknown>, index: number) => {
       const avgDuration = (page.avgDuration / 60).toFixed(1);
       const bounceRate = (page.bounceRate * 100).toFixed(1);
       
@@ -197,7 +197,7 @@ This gives you a solid overview of how your site is performing overall!`;
     return response;
   }
 
-  private formatTrafficResponse(data: any, dateRange: string): string {
+  private formatTrafficResponse(data: Record<string, unknown>, dateRange: string): string {
     const { sources, dateRange: { startDate, endDate } } = data;
     
     if (!sources || sources.length === 0) {
@@ -205,11 +205,11 @@ This gives you a solid overview of how your site is performing overall!`;
     }
     
     const dateRangeText = this.formatDateRange(dateRange, startDate, endDate);
-    const totalSessions = sources.reduce((sum: number, source: any) => sum + source.sessions, 0);
+    const totalSessions = sources.reduce((sum: number, source: Record<string, unknown>) => sum + (source.sessions as number), 0);
     
     let response = `🔍 **Traffic Sources** ${dateRangeText}\n\n`;
     
-    sources.slice(0, 8).forEach((source: any, index: number) => {
+    sources.slice(0, 8).forEach((source: Record<string, unknown>, index: number) => {
       const percentage = ((source.sessions / totalSessions) * 100).toFixed(1);
       const bounceRate = (source.bounceRate * 100).toFixed(1);
       
@@ -221,7 +221,7 @@ This gives you a solid overview of how your site is performing overall!`;
     return response;
   }
 
-  private formatDevicesResponse(data: any, dateRange: string): string {
+  private formatDevicesResponse(data: Record<string, unknown>, dateRange: string): string {
     const { devices, dateRange: { startDate, endDate } } = data;
     
     if (!devices || devices.length === 0) {
@@ -231,8 +231,8 @@ This gives you a solid overview of how your site is performing overall!`;
     const dateRangeText = this.formatDateRange(dateRange, startDate, endDate);
     
     // Group by device category
-    const deviceGroups: Record<string, any> = {};
-    devices.forEach((device: any) => {
+    const deviceGroups: Record<string, Record<string, unknown>> = {};
+    devices.forEach((device: Record<string, unknown>) => {
       if (!deviceGroups[device.deviceCategory]) {
         deviceGroups[device.deviceCategory] = {
           sessions: 0,
@@ -257,10 +257,10 @@ This gives you a solid overview of how your site is performing overall!`;
     
     let response = `📱 **Device & Browser Breakdown** ${dateRangeText}\n\n`;
     
-    Object.entries(deviceGroups).forEach(([deviceCategory, stats]: [string, any]) => {
+    Object.entries(deviceGroups).forEach(([deviceCategory, stats]: [string, Record<string, unknown>]) => {
       const avgBounceRate = ((stats.bounceRate / stats.count) * 100).toFixed(1);
-      const topOS = Object.entries(stats.topOS).sort((a: any, b: any) => b[1] - a[1])[0];
-      const topBrowser = Object.entries(stats.topBrowser).sort((a: any, b: any) => b[1] - a[1])[0];
+      const topOS = Object.entries(stats.topOS as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
+      const topBrowser = Object.entries(stats.topBrowser as Record<string, number>).sort((a, b) => b[1] - a[1])[0];
       
       response += `**📊 ${deviceCategory.toUpperCase()}**\n`;
       response += `   👤 Users: ${stats.users.toLocaleString()}\n`;
@@ -273,7 +273,7 @@ This gives you a solid overview of how your site is performing overall!`;
     return response;
   }
 
-  private formatRealtimeResponse(data: any): string {
+  private formatRealtimeResponse(data: Record<string, unknown>): string {
     const { totalActiveUsers, byLocation } = data;
     
     if (totalActiveUsers === 0) {
@@ -287,12 +287,12 @@ This gives you a solid overview of how your site is performing overall!`;
       const locationMap: Record<string, number> = {};
       const deviceMap: Record<string, number> = {};
       
-      byLocation.forEach((user: any) => {
+      byLocation.forEach((user: Record<string, unknown>) => {
         const location = user.city !== 'Unknown' && user.city !== '(not set)' 
           ? `${user.city}, ${user.country}` 
-          : user.country;
-        locationMap[location] = (locationMap[location] || 0) + user.users;
-        deviceMap[user.device] = (deviceMap[user.device] || 0) + user.users;
+          : user.country as string;
+        locationMap[location as string] = (locationMap[location as string] || 0) + (user.users as number);
+        deviceMap[user.device as string] = (deviceMap[user.device as string] || 0) + (user.users as number);
       });
       
       // Top locations
