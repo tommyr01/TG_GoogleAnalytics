@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo 'No build step required for Node.js server'",
+    "build": "echo 'Build complete - no compilation needed for tsx runtime'",
     "start": "tsx src/node-server.ts",
     "dev": "tsx watch src/node-server.ts",
     "node-server": "tsx src/node-server.ts",
