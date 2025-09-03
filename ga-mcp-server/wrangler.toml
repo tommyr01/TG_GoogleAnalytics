@@ -1,0 +1,50 @@
+name = "ga-analytics-api"
+main = "src/worker.ts"
+compatibility_date = "2024-01-01"
+
+# Account and route configuration
+# workers_dev = true means it will be deployed to {name}.{subdomain}.workers.dev
+workers_dev = true
+
+# Optional: Custom domain (add your domain after setting up in Cloudflare)
+# routes = [
+#   { pattern = "ga-api.yourdomain.com/*", custom_domain = true }
+# ]
+
+# Environment variables (non-sensitive)
+[vars]
+OPENAI_MODEL = "gpt-3.5-turbo"
+
+# Node.js compatibility
+node_compat = true
+
+# Build configuration
+# [build]
+# command = "npm run build"
+
+# Optional: Specify build output directory
+# [build.upload]
+# format = "service-worker"
+
+# Optional: Add KV namespaces if needed for caching
+# [[kv_namespaces]]
+# binding = "GA_CACHE"
+# id = "your-kv-namespace-id"
+
+# Optional: Durable Objects for stateful connections
+# [[durable_objects.bindings]]
+# name = "GA_STATE"
+# class_name = "GAState"
+# script_name = "ga-analytics-api"
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Optional: Environment-specific configuration
+# [env.production]
+# vars = { OPENAI_MODEL = "gpt-4-turbo-preview" }
+
+# [env.staging]  
+# vars = { OPENAI_MODEL = "gpt-3.5-turbo" }

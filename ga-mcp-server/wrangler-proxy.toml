@@ -1,0 +1,28 @@
+name = "ga-analytics-proxy"
+main = "src/worker-proxy.ts"
+compatibility_date = "2024-01-01"
+
+# Deploy to workers.dev subdomain
+workers_dev = true
+
+# Environment variables
+[vars]
+# For local development, this will proxy to localhost:3000
+# In production, change this to your deployed Node.js server URL
+API_BACKEND_URL = "http://localhost:3000"
+CACHE_TTL = "300"  # 5 minutes cache
+
+# Development settings
+[dev]
+port = 8788
+local_protocol = "http"
+
+# Production environment (example)
+# Update API_BACKEND_URL when you deploy the Node.js server
+[env.production]
+vars = { API_BACKEND_URL = "https://your-nodejs-server.com", CACHE_TTL = "600" }
+
+# Optional: Custom domain configuration
+# routes = [
+#   { pattern = "analytics-api.yourdomain.com/*", custom_domain = true }
+# ]

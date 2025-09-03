@@ -1,0 +1,22 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+
+[[services]]
+name = "ga-analytics-api"
+source = "ga-server"
+buildCommand = "npm install"
+startCommand = "npm run node-dev"
+
+[services.variables]
+NODE_ENV = "production"
+PORT = "${{ PORT }}"
+
+# These will need to be set in Railway dashboard:
+# GA_PROPERTY_ID = "371647470"
+# GOOGLE_APPLICATION_CREDENTIALS_JSON = "[JSON content]"
+# OPENAI_API_KEY = "[your key]"

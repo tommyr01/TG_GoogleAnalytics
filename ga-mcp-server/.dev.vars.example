@@ -1,0 +1,24 @@
+# Google Analytics Configuration
+GA_PROPERTY_ID=123456789
+GOOGLE_APPLICATION_CREDENTIALS=/path/to/your/service-account-key.json
+
+# Alternative: Provide credentials as JSON string (useful for deployment)
+# GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"..."}
+
+# OpenAI Configuration for Natural Language Processing
+OPENAI_API_KEY=sk-your-openai-api-key-here
+OPENAI_MODEL=gpt-3.5-turbo
+
+# Server Configuration
+PORT=3001
+
+# Example Google Analytics Property ID format: 123456789
+# You can find this in your GA4 property settings under "Property details" 
+
+# To get a service account key:
+# 1. Go to https://console.cloud.google.com/
+# 2. Select your project (or create one)
+# 3. Enable the Google Analytics Reporting API
+# 4. Create a service account with the Analytics Viewer role
+# 5. Download the JSON key file
+# 6. In GA4, add the service account email as a viewer to your property
