@@ -10,7 +10,7 @@ restartPolicyType = "ON_FAILURE"
 name = "ga-analytics-api"
 source = "ga-server"
 buildCommand = "npm install"
-startCommand = "npm run node-dev"
+startCommand = "npm start"
 
 [services.variables]
 NODE_ENV = "production"
