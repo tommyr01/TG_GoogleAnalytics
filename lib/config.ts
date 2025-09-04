@@ -8,20 +8,7 @@ export const siteConfig = {
     twitter: "",
     github: "",
   },
-  navItems: [
-    {
-      href: "/",
-      label: "Dashboard",
-    },
-    {
-      href: "/analytics",
-      label: "Analytics",
-    },
-    {
-      href: "/impetus-podcast",
-      label: "Podcast",
-    },
-  ],
+  navItems: [],
 }
 
 export const META_THEME_COLORS = {
