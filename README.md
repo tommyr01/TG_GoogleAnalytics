@@ -164,3 +164,4 @@ This project is part of the TalentGuard analytics suite.
 ---
 
 Built with ❤️ using Next.js, React, and Google Analytics Data API
+# Trigger Vercel deployment - Thu Sep  4 17:48:32 CEST 2025
