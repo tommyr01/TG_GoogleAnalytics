@@ -138,23 +138,24 @@ export function ChatInterface() {
                       {message.role === 'user' ? (
                         <p className="text-white m-0">{message.content}</p>
                       ) : (
-                        <div className="markdown-content">
+                        <div className="prose prose-sm max-w-none text-foreground">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              p: ({children}) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
-                              ul: ({children}) => <ul className="mb-3 last:mb-0 pl-4 space-y-1 list-disc">{children}</ul>,
-                              ol: ({children}) => <ol className="mb-3 last:mb-0 pl-4 space-y-1 list-decimal">{children}</ol>,
-                              li: ({children}) => <li className="text-sm leading-relaxed">{children}</li>,
-                              strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
-                              em: ({children}) => <em className="italic text-muted-foreground">{children}</em>,
-                              code: ({children}) => <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono border">{children}</code>,
-                              h1: ({children}) => <h1 className="text-lg font-bold mb-3 mt-4 first:mt-0 text-foreground">{children}</h1>,
-                              h2: ({children}) => <h2 className="text-base font-bold mb-3 mt-4 first:mt-0 text-foreground">{children}</h2>,
-                              h3: ({children}) => <h3 className="text-sm font-bold mb-2 mt-3 first:mt-0 text-foreground">{children}</h3>,
-                              blockquote: ({children}) => <blockquote className="border-l-4 border-muted-foreground/25 pl-4 py-2 italic bg-muted/30 rounded-r">{children}</blockquote>,
-                              // Handle numbered/bulleted lists better
-                              div: ({children}) => <div className="space-y-2">{children}</div>
+                              p: ({children}) => <p style={{marginBottom: '12px', lineHeight: '1.6', whiteSpace: 'pre-wrap'}}>{children}</p>,
+                              ul: ({children}) => <ul style={{marginBottom: '12px', paddingLeft: '20px', listStyleType: 'disc'}}>{children}</ul>,
+                              ol: ({children}) => <ol style={{marginBottom: '12px', paddingLeft: '20px', listStyleType: 'decimal'}}>{children}</ol>,
+                              li: ({children}) => <li style={{marginBottom: '4px', lineHeight: '1.5'}}>{children}</li>,
+                              strong: ({children}) => <strong style={{fontWeight: '600', color: 'inherit'}}>{children}</strong>,
+                              em: ({children}) => <em style={{fontStyle: 'italic', opacity: '0.8'}}>{children}</em>,
+                              code: ({children}) => <code style={{backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontSize: '0.85em', fontFamily: 'monospace'}}>{children}</code>,
+                              h1: ({children}) => <h1 style={{fontSize: '1.125rem', fontWeight: '700', marginBottom: '12px', marginTop: '16px', lineHeight: '1.4'}}>{children}</h1>,
+                              h2: ({children}) => <h2 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '12px', marginTop: '16px', lineHeight: '1.4'}}>{children}</h2>,
+                              h3: ({children}) => <h3 style={{fontSize: '0.9rem', fontWeight: '600', marginBottom: '8px', marginTop: '12px', lineHeight: '1.4'}}>{children}</h3>,
+                              blockquote: ({children}) => <blockquote style={{borderLeft: '4px solid #d1d5db', paddingLeft: '16px', paddingTop: '8px', paddingBottom: '8px', fontStyle: 'italic', backgroundColor: '#f9fafb', borderRadius: '0 4px 4px 0'}}>{children}</blockquote>,
+                              br: () => <br />,
+                              // Ensure line breaks are preserved
+                              div: ({children}) => <div style={{marginBottom: '8px'}}>{children}</div>
                             }}
                           >
                             {message.content}
