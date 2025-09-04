@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Send, Bot, User, Loader2 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
 import { Button } from "@/registry/new-york-v4/ui/button"
 import { Input } from "@/registry/new-york-v4/ui/input"
 import { ScrollArea } from "@/registry/new-york-v4/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/registry/new-york-v4/ui/avatar"
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 
 interface Message {
   id: string
@@ -29,12 +31,21 @@ export function ChatInterface() {
     {
       id: '1',
       role: 'assistant',
-      content: 'Hello! I\'m your analytics assistant. Ask me anything about your Google Analytics data. I can help you understand your traffic, audience, conversions, and more.',
+      content: '👋 **Hello! I\'m your analytics assistant.**\n\nI can help you understand your Google Analytics data with insights about:\n\n• **Traffic patterns** and visitor trends\n• **Top performing pages** and content\n• **Device and browser usage**\n• **Traffic sources** and channels\n• **Real-time user activity**\n• **Engagement metrics** and conversions\n\nFeel free to ask me anything about your analytics data!',
       timestamp: new Date(),
     }
   ])
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+  }
+  
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -123,8 +134,37 @@ export function ChatInterface() {
                       ? 'bg-teal-600 text-white'
                       : 'bg-muted'
                   }`}>
-                    <p className="text-sm leading-relaxed">{message.content}</p>
-                    <p className="text-xs opacity-70 mt-1">
+                    <div className="text-sm leading-relaxed">
+                      {message.role === 'user' ? (
+                        <p className="text-white m-0">{message.content}</p>
+                      ) : (
+                        <div className="markdown-content">
+                          <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({children}) => <p className="mb-3 last:mb-0 leading-relaxed">{children}</p>,
+                              ul: ({children}) => <ul className="mb-3 last:mb-0 pl-4 space-y-1 list-disc">{children}</ul>,
+                              ol: ({children}) => <ol className="mb-3 last:mb-0 pl-4 space-y-1 list-decimal">{children}</ol>,
+                              li: ({children}) => <li className="text-sm leading-relaxed">{children}</li>,
+                              strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
+                              em: ({children}) => <em className="italic text-muted-foreground">{children}</em>,
+                              code: ({children}) => <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono border">{children}</code>,
+                              h1: ({children}) => <h1 className="text-lg font-bold mb-3 mt-4 first:mt-0 text-foreground">{children}</h1>,
+                              h2: ({children}) => <h2 className="text-base font-bold mb-3 mt-4 first:mt-0 text-foreground">{children}</h2>,
+                              h3: ({children}) => <h3 className="text-sm font-bold mb-2 mt-3 first:mt-0 text-foreground">{children}</h3>,
+                              blockquote: ({children}) => <blockquote className="border-l-4 border-muted-foreground/25 pl-4 py-2 italic bg-muted/30 rounded-r">{children}</blockquote>,
+                              // Handle numbered/bulleted lists better
+                              div: ({children}) => <div className="space-y-2">{children}</div>
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                    <p className={`text-xs mt-2 ${
+                      message.role === 'user' ? 'text-white/70' : 'text-muted-foreground'
+                    }`}>
                       {message.timestamp.toLocaleTimeString()}
                     </p>
                   </div>
@@ -147,6 +187,7 @@ export function ChatInterface() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
         
@@ -199,28 +240,28 @@ function generateMockResponse(input: string): string {
   const lowerInput = input.toLowerCase()
   
   if (lowerInput.includes('traffic') || lowerInput.includes('visitors')) {
-    return "Based on your analytics data, you've had 24,567 users this month, which represents a 12.5% increase from last month. Your traffic peaks typically occur on Tuesdays and Wednesdays, with the highest traffic coming from organic search (45.2%) followed by direct traffic (28.7%)."
+    return "📊 **Traffic Analysis**\n\nBased on your analytics data:\n\n• **24,567 users** this month (↑ **12.5%** from last month)\n• Peak traffic on **Tuesdays and Wednesdays**\n• **Top traffic sources:**\n  - Organic search: **45.2%**\n  - Direct traffic: **28.7%**\n  - Referral: **15.4%**\n  - Social media: **11.7%**"
   }
   
   if (lowerInput.includes('device') || lowerInput.includes('mobile')) {
-    return "Your users are primarily accessing your site from desktop devices (52.3%), followed by mobile (37.4%) and tablet (9.1%). Mobile traffic has been growing steadily, increasing by 15% over the past quarter."
+    return "📱 **Device Usage Breakdown**\n\n• **Desktop**: 52.3% of users\n• **Mobile**: 37.4% of users\n• **Tablet**: 9.1% of users\n• **Growth**: Mobile traffic ↑ **15%** this quarter\n\n*Mobile optimization is becoming increasingly important for your audience.*"
   }
   
   if (lowerInput.includes('bounce') || lowerInput.includes('engagement')) {
-    return "Your overall bounce rate is 32.4%, which is quite good! Your blog pages have the lowest bounce rate at 23.1%, while your contact page has the highest at 67.8%. Users spend an average of 2 minutes and 34 seconds on your site."
+    return "⏱️ **Engagement Metrics**\n\n• **Overall bounce rate**: 32.4% *(quite good!)*\n• **Average session duration**: 2 min 34 sec\n\n**By page type:**\n• Blog pages: **23.1%** bounce rate\n• Product pages: **28.9%** bounce rate\n• Contact page: **67.8%** bounce rate\n\n*Your blog content is particularly engaging to visitors.*"
   }
   
   if (lowerInput.includes('conversion') || lowerInput.includes('goals')) {
-    return "Your conversion rate is currently 3.2%, with the highest converting age group being 25-34 (4.1% conversion rate). The 'Products' page has the highest conversion rate at 5.8%, while social media traffic converts at 2.1%."
+    return "🎯 **Conversion Analysis**\n\n• **Overall conversion rate**: 3.2%\n• **Best converting age group**: 25-34 (**4.1%**)\n\n**By page:**\n• Products page: **5.8%** conversion rate\n• Homepage: **3.1%** conversion rate\n• Blog posts: **1.9%** conversion rate\n\n**By traffic source:**\n• Email campaigns: **4.2%**\n• Organic search: **3.8%**\n• Social media: **2.1%**"
   }
   
   if (lowerInput.includes('page') || lowerInput.includes('content')) {
-    return "Your top performing pages are: Homepage (15,234 views), Products (8,945 views), and About (6,723 views). The blog section shows strong engagement with an average time on page of 4 minutes and 45 seconds."
+    return "📄 **Top Performing Pages**\n\n1. **Homepage** - 15,234 views\n2. **Products** - 8,945 views\n3. **About** - 6,723 views\n4. **Blog Posts** - 5,432 views\n5. **Contact** - 3,210 views\n\n**Blog Performance:**\n• Average time on page: **4 min 45 sec**\n• Strong engagement with technical content\n• *Consider expanding your blog strategy*"
   }
   
   if (lowerInput.includes('source') || lowerInput.includes('referral')) {
-    return "Your traffic sources breakdown: Organic Search (45.2%), Direct (28.7%), Social Media (12.4%), Referral (8.9%), and Email (4.8%). Google is your top referrer, driving 38% of your total traffic."
+    return "🌐 **Traffic Sources Breakdown**\n\n• **Organic Search**: 45.2%\n• **Direct**: 28.7%\n• **Social Media**: 12.4%\n• **Referral**: 8.9%\n• **Email**: 4.8%\n\n**Top Referrers:**\n1. **Google** - 38% of total traffic\n2. **Facebook** - 8.2%\n3. **LinkedIn** - 3.1%\n4. **Twitter** - 1.1%\n\n*Your SEO strategy is working well!*"
   }
   
-  return "I can help you analyze various aspects of your Google Analytics data including traffic patterns, user behavior, conversion rates, and audience demographics. Could you be more specific about what you'd like to know?"
+  return "🤖 I can help you analyze various aspects of your Google Analytics data:\n\n• **Traffic patterns** and visitor trends\n• **User behavior** and engagement\n• **Conversion rates** and goals\n• **Audience demographics**\n\nCould you be more specific about what you'd like to know?"
 }

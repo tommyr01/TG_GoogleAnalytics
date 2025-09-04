@@ -282,6 +282,67 @@ Respond with JSON only:
   return JSON.parse(completion.choices[0].message.content || '{}');
 }
 
+// AI-powered conversational response generator
+async function generateConversationalResponse(question: string, data: any, interpretation: any) {
+  const systemPrompt = `You are an expert Google Analytics consultant with a friendly, conversational personality. Your role is to transform raw analytics data into engaging, insightful conversations that help users understand and act on their data.
+
+## Your Communication Style:
+- Use friendly, conversational language ("Hey!", "Great!", "I noticed...", "Here's what I found...")
+- Be enthusiastic about good performance and supportive about areas for improvement
+- Always provide context and explain what the numbers actually mean
+- Give specific, actionable recommendations
+- Ask follow-up questions to encourage deeper analysis
+- Use appropriate emojis to make responses engaging (🚀, 📊, 💡, 🎯, etc.)
+- Compare to industry benchmarks when relevant
+- Explain trends and patterns in plain English
+
+## Response Structure:
+1. **Opening**: Friendly greeting with key insight
+2. **Key Findings**: Most important metrics with context
+3. **Insights**: What the data means and why it matters
+4. **Recommendations**: Specific actions they can take
+5. **Follow-up**: Questions to encourage deeper analysis
+
+## Industry Benchmarks (use these for comparisons):
+- Average bounce rate: 40-60% (lower is better)
+- Good session duration: 2-4 minutes
+- Healthy engagement rate: 60%+
+- Strong new user ratio: 60-80%
+- Mobile traffic: 50-70% is typical
+- Organic search should be 40%+ of traffic
+
+## Formatting:
+- Use markdown for better readability
+- Include relevant emojis
+- Use bullet points and sections
+- Highlight important numbers
+- Make it scannable
+
+Transform the analytics data into an engaging conversation that provides value and encourages action.`;
+
+  const userPrompt = `Question: "${question}"
+
+Data Type: ${interpretation.dataType}
+Date Range: ${interpretation.dateRange}
+
+Analytics Data:
+${JSON.stringify(data, null, 2)}
+
+Please analyze this data and provide a conversational, insightful response that helps the user understand their analytics and provides actionable recommendations.`;
+
+  const completion = await openaiClient.chat.completions.create({
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt }
+    ],
+    temperature: 0.7,
+    max_tokens: 1500,
+  });
+
+  return completion.choices[0].message.content || 'I\'m sorry, I couldn\'t analyze your data properly. Please try asking about specific metrics like traffic, pages, or user behavior.';
+}
+
 // API Routes
 app.get('/health', (req, res) => {
   res.json({ 
@@ -395,11 +456,15 @@ app.post('/api/query', async (req, res) => {
         data = await getAnalyticsSummary(interpretation.dateRange);
     }
 
-    // Format response with interpretation
+    // Generate conversational AI response
+    const aiResponse = await generateConversationalResponse(question, data, interpretation);
+
+    // Format response with interpretation and AI-generated content
     const response = {
       question,
       interpretation,
       data,
+      aiResponse,
       timestamp: new Date().toISOString(),
     };
 
@@ -428,5 +493,31 @@ async function startServer() {
     process.exit(1);
   }
 }
+
+// Add a test endpoint for AI responses
+app.post('/api/test-ai', async (req, res) => {
+  try {
+    const { question } = req.body;
+    const mockData = {
+      dateRange: { startDate: '2024-08-05', endDate: '2024-09-04' },
+      metrics: {
+        sessions: 5432,
+        activeUsers: 4321,
+        newUsers: 3456,
+        pageViews: 8765,
+        avgSessionDuration: 125.5,
+        bounceRate: 0.561,
+        engagementRate: 0.683
+      }
+    };
+    
+    const interpretation = { dataType: 'summary', dateRange: '30days' };
+    const aiResponse = await generateConversationalResponse(question, mockData, interpretation);
+    
+    res.json({ aiResponse });
+  } catch (error) {
+    res.status(500).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
 
 startServer();

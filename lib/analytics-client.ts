@@ -18,6 +18,7 @@ export interface AnalyticsResponse {
     limit?: number;
   };
   data: Record<string, unknown>;
+  aiResponse?: string;
   timestamp: string;
 }
 
@@ -48,7 +49,12 @@ export class AnalyticsClient {
 
       const data: AnalyticsResponse = await response.json();
       
-      // Format the response into natural language
+      // Use AI-generated response if available, otherwise fallback to formatted response
+      if (data.aiResponse) {
+        return data.aiResponse;
+      }
+      
+      // Fallback: Format the response into natural language
       return this.formatResponse(data);
     } catch (error) {
       console.error('Analytics query error:', error);
