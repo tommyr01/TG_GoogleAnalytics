@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat Markdown Formatting Test</title>
+    <style>
+        /* Import our CSS classes for testing */
+        .chat-message-content {
+            max-width: none;
+            font-size: 0.875rem;
+            line-height: 1.5;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 20px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            margin: 20px;
+        }
+
+        .chat-paragraph {
+            margin-bottom: 0.75rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin-top: 0;
+        }
+
+        .chat-paragraph:last-child {
+            margin-bottom: 0;
+        }
+
+        .chat-list {
+            margin-bottom: 0.75rem;
+            margin-top: 0;
+            padding-left: 1.25rem;
+        }
+
+        .chat-list-bulleted {
+            list-style-type: disc;
+        }
+
+        .chat-list-numbered {
+            list-style-type: decimal;
+        }
+
+        .chat-list-item {
+            margin-bottom: 0.25rem;
+            line-height: 1.5;
+        }
+
+        .chat-strong {
+            font-weight: 600;
+            color: inherit;
+        }
+
+        .chat-emphasis {
+            font-style: italic;
+            opacity: 0.85;
+        }
+
+        .chat-code {
+            background-color: rgb(243, 244, 246);
+            padding: 0.125rem 0.375rem;
+            border-radius: 0.25rem;
+            font-size: 0.85em;
+            font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+            color: rgb(55, 65, 81);
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Markdown Formatting Test</h1>
+    <p>This simulates how our chat responses will look with the new CSS classes.</p>
+
+    <div class="chat-message-content">
+        <p class="chat-paragraph">🚀 Your traffic is looking solid this month!</p>
+        
+        <p class="chat-paragraph">📊 <strong class="chat-strong">Here's what I found:</strong></p>
+        
+        <ul class="chat-list chat-list-bulleted">
+            <li class="chat-list-item">You had <strong class="chat-strong">24,567 users</strong> visit your site - that's a fantastic <strong class="chat-strong">12.5% increase</strong> from last month! 📈</li>
+            <li class="chat-list-item">Your busiest days are <strong class="chat-strong">Tuesdays and Wednesdays</strong> - perfect for launching new content!</li>
+        </ul>
+
+        <p class="chat-paragraph"><strong class="chat-strong">Traffic breakdown:</strong></p>
+
+        <ul class="chat-list chat-list-bulleted">
+            <li class="chat-list-item"><strong class="chat-strong">Organic search</strong>: 45.2% (great SEO work! 👏)</li>
+            <li class="chat-list-item"><strong class="chat-strong">Direct traffic</strong>: 28.7% (strong brand recognition)</li>
+            <li class="chat-list-item"><strong class="chat-strong">Referral traffic</strong>: 15.4% (partnerships paying off)</li>
+            <li class="chat-list-item"><strong class="chat-strong">Social media</strong>: 11.7% (room for growth here!)</li>
+        </ul>
+
+        <p class="chat-paragraph">💡 <strong class="chat-strong">Quick tip</strong>: Your organic search is performing well above the 40% benchmark - whatever SEO strategy you're using, keep it up!</p>
+
+        <p class="chat-paragraph">Want me to dive deeper into any specific traffic source?</p>
+    </div>
+
+    <div class="chat-message-content">
+        <p class="chat-paragraph">Here's a <code class="chat-code">code snippet</code> and some <em class="chat-emphasis">emphasized text</em>.</p>
+        
+        <ol class="chat-list chat-list-numbered">
+            <li class="chat-list-item">First numbered item</li>
+            <li class="chat-list-item">Second numbered item</li>
+            <li class="chat-list-item">Third numbered item</li>
+        </ol>
+    </div>
+</body>
+</html>

@@ -138,24 +138,44 @@ export function ChatInterface() {
                       {message.role === 'user' ? (
                         <p className="text-white m-0">{message.content}</p>
                       ) : (
-                        <div className="prose prose-sm max-w-none text-foreground">
+                        <div className="chat-message-content">
                           <ReactMarkdown
                             remarkPlugins={[remarkGfm]}
                             components={{
-                              p: ({children}) => <p style={{marginBottom: '12px', lineHeight: '1.6', whiteSpace: 'pre-wrap'}}>{children}</p>,
-                              ul: ({children}) => <ul style={{marginBottom: '12px', paddingLeft: '20px', listStyleType: 'disc'}}>{children}</ul>,
-                              ol: ({children}) => <ol style={{marginBottom: '12px', paddingLeft: '20px', listStyleType: 'decimal'}}>{children}</ol>,
-                              li: ({children}) => <li style={{marginBottom: '4px', lineHeight: '1.5'}}>{children}</li>,
-                              strong: ({children}) => <strong style={{fontWeight: '600', color: 'inherit'}}>{children}</strong>,
-                              em: ({children}) => <em style={{fontStyle: 'italic', opacity: '0.8'}}>{children}</em>,
-                              code: ({children}) => <code style={{backgroundColor: '#f3f4f6', padding: '2px 6px', borderRadius: '4px', fontSize: '0.85em', fontFamily: 'monospace'}}>{children}</code>,
-                              h1: ({children}) => <h1 style={{fontSize: '1.125rem', fontWeight: '700', marginBottom: '12px', marginTop: '16px', lineHeight: '1.4'}}>{children}</h1>,
-                              h2: ({children}) => <h2 style={{fontSize: '1rem', fontWeight: '600', marginBottom: '12px', marginTop: '16px', lineHeight: '1.4'}}>{children}</h2>,
-                              h3: ({children}) => <h3 style={{fontSize: '0.9rem', fontWeight: '600', marginBottom: '8px', marginTop: '12px', lineHeight: '1.4'}}>{children}</h3>,
-                              blockquote: ({children}) => <blockquote style={{borderLeft: '4px solid #d1d5db', paddingLeft: '16px', paddingTop: '8px', paddingBottom: '8px', fontStyle: 'italic', backgroundColor: '#f9fafb', borderRadius: '0 4px 4px 0'}}>{children}</blockquote>,
-                              br: () => <br />,
-                              // Ensure line breaks are preserved
-                              div: ({children}) => <div style={{marginBottom: '8px'}}>{children}</div>
+                              p: ({ children }) => (
+                                <p className="chat-paragraph">{children}</p>
+                              ),
+                              ul: ({ children }) => (
+                                <ul className="chat-list chat-list-bulleted">{children}</ul>
+                              ),
+                              ol: ({ children }) => (
+                                <ol className="chat-list chat-list-numbered">{children}</ol>
+                              ),
+                              li: ({ children }) => (
+                                <li className="chat-list-item">{children}</li>
+                              ),
+                              strong: ({ children }) => (
+                                <strong className="chat-strong">{children}</strong>
+                              ),
+                              em: ({ children }) => (
+                                <em className="chat-emphasis">{children}</em>
+                              ),
+                              code: ({ children }) => (
+                                <code className="chat-code">{children}</code>
+                              ),
+                              h1: ({ children }) => (
+                                <h1 className="chat-heading chat-heading-1">{children}</h1>
+                              ),
+                              h2: ({ children }) => (
+                                <h2 className="chat-heading chat-heading-2">{children}</h2>
+                              ),
+                              h3: ({ children }) => (
+                                <h3 className="chat-heading chat-heading-3">{children}</h3>
+                              ),
+                              blockquote: ({ children }) => (
+                                <blockquote className="chat-blockquote">{children}</blockquote>
+                              ),
+                              br: () => <br className="chat-break" />
                             }}
                           >
                             {message.content}
@@ -241,27 +261,27 @@ function generateMockResponse(input: string): string {
   const lowerInput = input.toLowerCase()
   
   if (lowerInput.includes('traffic') || lowerInput.includes('visitors')) {
-    return "📊 **Traffic Analysis**\n\nBased on your analytics data:\n\n• **24,567 users** this month (↑ **12.5%** from last month)\n• Peak traffic on **Tuesdays and Wednesdays**\n• **Top traffic sources:**\n  - Organic search: **45.2%**\n  - Direct traffic: **28.7%**\n  - Referral: **15.4%**\n  - Social media: **11.7%**"
+    return "📊 **Traffic Analysis**\n\nBased on your analytics data:\n\n• **24,567 users** this month (↑ **12.5%** from last month)\n\n• Peak traffic on **Tuesdays and Wednesdays**\n\n• **Top traffic sources:**\n\n  - Organic search: **45.2%**\n  - Direct traffic: **28.7%**\n  - Referral: **15.4%**\n  - Social media: **11.7%**"
   }
   
   if (lowerInput.includes('device') || lowerInput.includes('mobile')) {
-    return "📱 **Device Usage Breakdown**\n\n• **Desktop**: 52.3% of users\n• **Mobile**: 37.4% of users\n• **Tablet**: 9.1% of users\n• **Growth**: Mobile traffic ↑ **15%** this quarter\n\n*Mobile optimization is becoming increasingly important for your audience.*"
+    return "📱 **Device Usage Breakdown**\n\n• **Desktop**: 52.3% of users\n\n• **Mobile**: 37.4% of users\n\n• **Tablet**: 9.1% of users\n\n• **Growth**: Mobile traffic ↑ **15%** this quarter\n\n*Mobile optimization is becoming increasingly important for your audience.*"
   }
   
   if (lowerInput.includes('bounce') || lowerInput.includes('engagement')) {
-    return "⏱️ **Engagement Metrics**\n\n• **Overall bounce rate**: 32.4% *(quite good!)*\n• **Average session duration**: 2 min 34 sec\n\n**By page type:**\n• Blog pages: **23.1%** bounce rate\n• Product pages: **28.9%** bounce rate\n• Contact page: **67.8%** bounce rate\n\n*Your blog content is particularly engaging to visitors.*"
+    return "⏱️ **Engagement Metrics**\n\n• **Overall bounce rate**: 32.4% *(quite good!)*\n\n• **Average session duration**: 2 min 34 sec\n\n**By page type:**\n\n• Blog pages: **23.1%** bounce rate\n• Product pages: **28.9%** bounce rate\n• Contact page: **67.8%** bounce rate\n\n*Your blog content is particularly engaging to visitors.*"
   }
   
   if (lowerInput.includes('conversion') || lowerInput.includes('goals')) {
-    return "🎯 **Conversion Analysis**\n\n• **Overall conversion rate**: 3.2%\n• **Best converting age group**: 25-34 (**4.1%**)\n\n**By page:**\n• Products page: **5.8%** conversion rate\n• Homepage: **3.1%** conversion rate\n• Blog posts: **1.9%** conversion rate\n\n**By traffic source:**\n• Email campaigns: **4.2%**\n• Organic search: **3.8%**\n• Social media: **2.1%**"
+    return "🎯 **Conversion Analysis**\n\n• **Overall conversion rate**: 3.2%\n\n• **Best converting age group**: 25-34 (**4.1%**)\n\n**By page:**\n\n• Products page: **5.8%** conversion rate\n• Homepage: **3.1%** conversion rate\n• Blog posts: **1.9%** conversion rate\n\n**By traffic source:**\n\n• Email campaigns: **4.2%**\n• Organic search: **3.8%**\n• Social media: **2.1%**"
   }
   
   if (lowerInput.includes('page') || lowerInput.includes('content')) {
-    return "📄 **Top Performing Pages**\n\n1. **Homepage** - 15,234 views\n2. **Products** - 8,945 views\n3. **About** - 6,723 views\n4. **Blog Posts** - 5,432 views\n5. **Contact** - 3,210 views\n\n**Blog Performance:**\n• Average time on page: **4 min 45 sec**\n• Strong engagement with technical content\n• *Consider expanding your blog strategy*"
+    return "📄 **Top Performing Pages**\n\n1. **Homepage** - 15,234 views\n\n2. **Products** - 8,945 views\n\n3. **About** - 6,723 views\n\n4. **Blog Posts** - 5,432 views\n\n5. **Contact** - 3,210 views\n\n**Blog Performance:**\n\n• Average time on page: **4 min 45 sec**\n• Strong engagement with technical content\n• *Consider expanding your blog strategy*"
   }
   
   if (lowerInput.includes('source') || lowerInput.includes('referral')) {
-    return "🌐 **Traffic Sources Breakdown**\n\n• **Organic Search**: 45.2%\n• **Direct**: 28.7%\n• **Social Media**: 12.4%\n• **Referral**: 8.9%\n• **Email**: 4.8%\n\n**Top Referrers:**\n1. **Google** - 38% of total traffic\n2. **Facebook** - 8.2%\n3. **LinkedIn** - 3.1%\n4. **Twitter** - 1.1%\n\n*Your SEO strategy is working well!*"
+    return "🌐 **Traffic Sources Breakdown**\n\n• **Organic Search**: 45.2%\n\n• **Direct**: 28.7%\n\n• **Social Media**: 12.4%\n\n• **Referral**: 8.9%\n\n• **Email**: 4.8%\n\n**Top Referrers:**\n\n1. **Google** - 38% of total traffic\n\n2. **Facebook** - 8.2%\n\n3. **LinkedIn** - 3.1%\n\n4. **Twitter** - 1.1%\n\n*Your SEO strategy is working well!*"
   }
   
   return "🤖 I can help you analyze various aspects of your Google Analytics data:\n\n• **Traffic patterns** and visitor trends\n• **User behavior** and engagement\n• **Conversion rates** and goals\n• **Audience demographics**\n\nCould you be more specific about what you'd like to know?"
