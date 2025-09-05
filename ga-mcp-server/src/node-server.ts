@@ -120,10 +120,11 @@ async function getAnalyticsSummary(dateRange = '30days') {
   };
 }
 
-async function getTopPages(dateRange = '30days', limit = 10) {
+async function getTopPages(dateRange = '30days', limit = 10, pagePathFilter?: string) {
   const { startDate, endDate } = parseDateRange(dateRange);
   
-  const [response] = await analyticsClient.runReport({
+  // Build request with optional page path filter
+  const request: any = {
     property: `properties/${process.env.GA_PROPERTY_ID}`,
     dateRanges: [{ startDate, endDate }],
     dimensions: [
@@ -143,7 +144,22 @@ async function getTopPages(dateRange = '30days', limit = 10) {
         desc: true,
       },
     ],
-  });
+  };
+
+  // Add page path filter if provided
+  if (pagePathFilter) {
+    request.dimensionFilter = {
+      filter: {
+        fieldName: 'pagePath',
+        stringFilter: {
+          matchType: 'EXACT',
+          value: pagePathFilter
+        }
+      }
+    };
+  }
+  
+  const [response] = await analyticsClient.runReport(request);
 
   return {
     dateRange: { startDate, endDate },
@@ -432,39 +448,147 @@ async function getGeography(dateRange = '30days', limit = 10) {
   };
 }
 
-// Natural language query interpreter
-async function interpretQuery(question: string) {
-  const systemPrompt = `You are a Google Analytics query interpreter. Convert natural language questions into specific data requests.
+// URL extraction and page path conversion utility
+function extractPagePathFromUrl(question: string): string | null {
+  // Enhanced URL patterns to capture full URLs
+  const urlPatterns = [
+    /https?:\/\/[^\s]+/gi,  // Standard HTTP/HTTPS URLs
+    /www\.[^\s]+/gi,       // URLs starting with www
+    /[a-zA-Z0-9-]+\.[a-zA-Z]{2,}[^\s]*/gi  // Domain patterns
+  ];
   
-Available data types:
-- summary: Overall metrics (sessions, users, pageviews, bounce rate, etc.)
-- pages: Top pages with traffic data
-- blog: Specifically blog pages (/blog/* URLs only)
-- realtime: Current active users
-- traffic: Traffic sources and referrers
-- devices: Device and browser breakdown
+  for (const pattern of urlPatterns) {
+    const matches = question.match(pattern);
+    if (matches) {
+      for (const url of matches) {
+        try {
+          // Clean up and parse URL
+          let cleanUrl = url;
+          if (!cleanUrl.startsWith('http')) {
+            cleanUrl = 'https://' + cleanUrl;
+          }
+          
+          const urlObj = new URL(cleanUrl);
+          let pagePath = urlObj.pathname;
+          
+          // Remove trailing slash unless it's the root
+          if (pagePath.length > 1 && pagePath.endsWith('/')) {
+            pagePath = pagePath.slice(0, -1);
+          }
+          
+          // Return first valid page path found
+          if (pagePath && pagePath !== '/') {
+            return pagePath;
+          }
+        } catch (error) {
+          // Continue to next URL if parsing fails
+          continue;
+        }
+      }
+    }
+  }
+  
+  return null;
+}
 
-Respond with JSON only:
+// Natural language query interpreter with enhanced GA context
+async function interpretQuery(question: string) {
+  // Extract page path from URL if present
+  const pagePathFilter = extractPagePathFromUrl(question);
+  
+  const systemPrompt = `You are an expert Google Analytics consultant and query interpreter. You have deep knowledge of GA4 concepts and can intelligently convert natural language questions into specific data requests.
+
+## GOOGLE ANALYTICS 4 EXPERTISE:
+
+### Core GA4 Concepts:
+- **Dimensions**: Qualitative attributes (pagePath, pageTitle, country, deviceCategory, etc.)
+- **Metrics**: Quantitative measurements (sessions, pageViews, activeUsers, bounceRate, etc.)
+- **Page Path**: The URL path without domain (e.g., /blog/article-title)
+- **Filtering**: Using dimensions to narrow down data (exact match, contains, begins with)
+
+### Available MCP Endpoints & When to Use:
+1. **summary**: Overall site metrics - use for general performance questions
+2. **pages**: Individual page data with optional filtering - BEST for specific page questions
+3. **blog**: All blog posts aggregated (/blog/* only) - use ONLY for "all blog posts" or "blog section" questions
+4. **traffic**: Traffic sources and channels - use for acquisition questions
+5. **devices**: Device/browser breakdown - use for technical audience questions
+6. **realtime**: Current active users - use for "right now" questions
+
+### URL Handling Rules:
+- Full URLs → Extract page path: https://domain.com/blog/post → /blog/post
+- Specific URLs always mean "pages" dataType with pagePathFilter
+- Remove trailing slashes except for root (/)
+- Page path filtering uses EXACT match in GA4
+
+### Query Interpretation Intelligence:
+- "This page" + URL = pages + pagePathFilter
+- "Blog post" + URL = pages + pagePathFilter (NOT blog endpoint)
+- "All blog posts" = blog endpoint (no filter)
+- "Blog section performance" = blog endpoint
+- "How has X performed" = look for URLs, use pages with filter
+- "Top pages" = pages without filter
+- "Since posted/published" = alltime dateRange
+- "Organic traffic" = traffic endpoint
+- "Mobile users" = devices endpoint
+
+### Date Range Mapping (DEFAULT to 30days unless specified):
+- "today" → today
+- "yesterday" → yesterday  
+- "last week" / "7 days" → 7days
+- "last month" / "30 days" / "monthly" → 30days (DEFAULT)
+- "last 3 months" / "90 days" / "quarterly" → 90days
+- "last year" / "12 months" → 12months
+- "2 years" → 2years
+- "3 years" → 3years
+- "all time" / "ever" / "since posted" / "lifetime" → alltime
+- **DEFAULT**: Use 30days when no specific timeframe mentioned
+
+### Response Format - JSON only:
 {
   "dataType": "summary|pages|blog|realtime|traffic|devices",
   "dateRange": "today|yesterday|7days|30days|90days|12months|2years|3years|alltime",
-  "limit": number (optional, for list results)
+  "pagePathFilter": "string|null",
+  "limit": number (optional, default 10 for lists)
 }
 
-Important: If the question mentions "blog", "/blog", "blog pages", or "blog posts", use dataType "blog".
-If the question mentions "3 years", "all time", "ever", or similar, use the appropriate dateRange.`;
+### Critical Decision Rules:
+1. **URL Present**: Always use "pages" + pagePathFilter (even for blog posts)
+2. **No URL + "blog section"**: Use "blog" endpoint
+3. **No URL + "this page"**: Use "pages" (let user specify)
+4. **Performance questions**: Look for URLs first, then decide endpoint
+5. **Traffic/source questions**: Use "traffic" endpoint
+6. **Device/technical questions**: Use "devices" endpoint
+7. **"Right now" questions**: Use "realtime" endpoint
+
+Be intelligent about context clues and always provide the most specific, actionable data request.`;
+
+  const userPrompt = `Question: "${question}"
+
+${pagePathFilter ? `Detected URL with page path: "${pagePathFilter}"` : 'No URL detected in question'}
+
+Analyze this question and provide the optimal GA4 data request.`;
 
   const completion = await openaiClient.chat.completions.create({
-    model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
     messages: [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: question }
+      { role: 'user', content: userPrompt }
     ],
     response_format: { type: 'json_object' },
     temperature: 0,
   });
 
-  return JSON.parse(completion.choices[0].message.content || '{}');
+  const interpretation = JSON.parse(completion.choices[0].message.content || '{}');
+  
+  // Override pagePathFilter with extracted value if found, ensure null instead of undefined
+  interpretation.pagePathFilter = pagePathFilter || null;
+  
+  // Default to 30days if no dateRange specified
+  if (!interpretation.dateRange) {
+    interpretation.dateRange = '30days';
+  }
+  
+  return interpretation;
 }
 
 // AI-powered conversational response generator
@@ -480,6 +604,7 @@ async function generateConversationalResponse(question: string, data: any, inter
 - Use appropriate emojis to make responses engaging (🚀, 📊, 💡, 🎯, etc.)
 - Compare to industry benchmarks when relevant
 - Explain trends and patterns in plain English
+- When no data is found for specific pages, be honest but helpful
 
 ## Response Structure:
 1. **Opening**: Friendly greeting with key insight
@@ -487,6 +612,11 @@ async function generateConversationalResponse(question: string, data: any, inter
 3. **Insights**: What the data means and why it matters
 4. **Recommendations**: Specific actions they can take
 5. **Follow-up**: Questions to encourage deeper analysis
+
+## Special Handling:
+- **No Data Found**: When filtering returns empty results, explain this honestly and suggest alternatives
+- **Specific Page Queries**: Focus on the requested page's performance vs. site average
+- **URL Filtering**: Acknowledge when data is filtered to a specific page path
 
 ## Industry Benchmarks (use these for comparisons):
 - Average bounce rate: 40-60% (lower is better)
@@ -509,9 +639,13 @@ Transform the analytics data into an engaging conversation that provides value a
 
 Data Type: ${interpretation.dataType}
 Date Range: ${interpretation.dateRange}
+${interpretation.pagePathFilter ? `Page Path Filter: ${interpretation.pagePathFilter}` : ''}
 
 Analytics Data:
 ${JSON.stringify(data, null, 2)}
+
+${interpretation.pagePathFilter && (!data.pages || data.pages.length === 0) ? 
+'IMPORTANT: No data was found for the specific page path. This could mean the URL has no traffic in the date range, the path is incorrect, or the page doesn\'t exist. Please address this in your response and suggest alternatives.' : ''}
 
 Please analyze this data and provide a conversational, insightful response that helps the user understand their analytics and provides actionable recommendations.`;
 
@@ -555,7 +689,8 @@ app.get('/api/pages', async (req, res) => {
   try {
     const dateRange = req.query.dateRange as string || '30days';
     const limit = parseInt(req.query.limit as string || '10');
-    const data = await getTopPages(dateRange, limit);
+    const pagePathFilter = req.query.pagePathFilter as string;
+    const data = await getTopPages(dateRange, limit, pagePathFilter);
     res.json(data);
   } catch (error) {
     console.error('Pages error:', error);
@@ -676,31 +811,48 @@ app.post('/api/query', async (req, res) => {
     
     // Interpret the question
     const interpretation = await interpretQuery(question);
+    console.log(`Query interpretation for "${question}":`, interpretation);
     
     // Fetch appropriate data based on interpretation
     let data: any;
+    const startTime = Date.now();
+    
     switch (interpretation.dataType) {
       case 'summary':
+        console.log(`Fetching analytics summary for ${interpretation.dateRange}`);
         data = await getAnalyticsSummary(interpretation.dateRange);
         break;
       case 'pages':
-        data = await getTopPages(interpretation.dateRange, interpretation.limit || 10);
+        if (interpretation.pagePathFilter) {
+          console.log(`Fetching specific page data for "${interpretation.pagePathFilter}" over ${interpretation.dateRange}`);
+        } else {
+          console.log(`Fetching top pages for ${interpretation.dateRange}, limit: ${interpretation.limit || 10}`);
+        }
+        data = await getTopPages(interpretation.dateRange, interpretation.limit || 10, interpretation.pagePathFilter);
         break;
       case 'blog':
+        console.log(`Fetching blog pages (/blog/* only) for ${interpretation.dateRange}, limit: ${interpretation.limit || 10}`);
         data = await getBlogPages(interpretation.dateRange, interpretation.limit || 10);
         break;
       case 'traffic':
+        console.log(`Fetching traffic sources for ${interpretation.dateRange}`);
         data = await getTrafficSources(interpretation.dateRange, interpretation.limit || 10);
         break;
       case 'devices':
+        console.log(`Fetching device breakdown for ${interpretation.dateRange}`);
         data = await getDeviceBreakdown(interpretation.dateRange);
         break;
       case 'realtime':
+        console.log('Fetching realtime users data');
         data = await getRealtimeUsers();
         break;
       default:
+        console.log(`Unknown data type ${interpretation.dataType}, falling back to summary`);
         data = await getAnalyticsSummary(interpretation.dateRange);
     }
+    
+    const dataFetchTime = Date.now() - startTime;
+    console.log(`Data fetch completed in ${dataFetchTime}ms`);
 
     // Generate conversational AI response
     const aiResponse = await generateConversationalResponse(question, data, interpretation);
@@ -711,6 +863,14 @@ app.post('/api/query', async (req, res) => {
       interpretation,
       data,
       aiResponse,
+      debug: {
+        dataFetchTime: `${dataFetchTime}ms`,
+        endpoint: interpretation.dataType,
+        dateRange: interpretation.dateRange,
+        filter: interpretation.pagePathFilter ? `Filtered to: ${interpretation.pagePathFilter}` : 
+                (interpretation.dataType === 'blog' ? '/blog/* URLs only' : 'No URL filtering'),
+        pagePathFilter: interpretation.pagePathFilter || null,
+      },
       timestamp: new Date().toISOString(),
     };
 
