@@ -1,12 +1,18 @@
 "use client"
 
 import { useState, useRef, useEffect } from "react"
-import { Send, Bot, User, Loader2 } from "lucide-react"
+import { Send, Bot, User, Loader2, HelpCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
 import { Button } from "@/registry/new-york-v4/ui/button"
 import { Input } from "@/registry/new-york-v4/ui/input"
 import { ScrollArea } from "@/registry/new-york-v4/ui/scroll-area"
 import { Avatar, AvatarFallback } from "@/registry/new-york-v4/ui/avatar"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/registry/new-york-v4/ui/tooltip"
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 
@@ -38,6 +44,7 @@ export function ChatInterface() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const API_URL = process.env.NEXT_PUBLIC_ANALYTICS_SERVER_URL || 'http://localhost:3000'
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -63,21 +70,20 @@ export function ChatInterface() {
     setIsLoading(true)
 
     try {
-      // In a real implementation, this would call the GA analytics agent
-      const response = await fetch('/api/analytics/chat', {
+      // Call the GA analytics agent through the MCP server
+      const response = await fetch(`${API_URL}/api/query`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ question: input }),
       })
 
       let assistantContent = ''
       
       if (!response.ok) {
-        // Mock response for demonstration
-        assistantContent = generateMockResponse(input)
+        assistantContent = `Sorry, I encountered an error while analyzing your data (${response.status} ${response.statusText}). Please try rephrasing your question or try again later.`
       } else {
         const data = await response.json()
-        assistantContent = data.response
+        assistantContent = data.aiResponse || data.response || 'I received your question but couldn\'t generate a proper response. Please try again.'
       }
 
       const assistantMessage: Message = {
@@ -106,13 +112,22 @@ export function ChatInterface() {
   }
 
   return (
-    <Card className="h-full flex flex-col">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <div className="size-3 rounded-full bg-teal-600" />
-          Analytics Assistant
-        </CardTitle>
-      </CardHeader>
+    <TooltipProvider>
+      <Card className="h-full flex flex-col">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-teal-600" />
+            Analytics Assistant
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>Ask questions about your Google Analytics data in natural language. Get insights about traffic patterns, user behavior, conversions, and more.</p>
+              </TooltipContent>
+            </Tooltip>
+          </CardTitle>
+        </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-0">
         <ScrollArea className="flex-1 p-4">
@@ -254,35 +269,7 @@ export function ChatInterface() {
         </form>
       </CardContent>
     </Card>
+    </TooltipProvider>
   )
 }
 
-function generateMockResponse(input: string): string {
-  const lowerInput = input.toLowerCase()
-  
-  if (lowerInput.includes('traffic') || lowerInput.includes('visitors')) {
-    return "📊 **Traffic Analysis**\n\nBased on your analytics data:\n\n• **24,567 users** this month (↑ **12.5%** from last month)\n\n• Peak traffic on **Tuesdays and Wednesdays**\n\n• **Top traffic sources:**\n\n  - Organic search: **45.2%**\n  - Direct traffic: **28.7%**\n  - Referral: **15.4%**\n  - Social media: **11.7%**"
-  }
-  
-  if (lowerInput.includes('device') || lowerInput.includes('mobile')) {
-    return "📱 **Device Usage Breakdown**\n\n• **Desktop**: 52.3% of users\n\n• **Mobile**: 37.4% of users\n\n• **Tablet**: 9.1% of users\n\n• **Growth**: Mobile traffic ↑ **15%** this quarter\n\n*Mobile optimization is becoming increasingly important for your audience.*"
-  }
-  
-  if (lowerInput.includes('bounce') || lowerInput.includes('engagement')) {
-    return "⏱️ **Engagement Metrics**\n\n• **Overall bounce rate**: 32.4% *(quite good!)*\n\n• **Average session duration**: 2 min 34 sec\n\n**By page type:**\n\n• Blog pages: **23.1%** bounce rate\n• Product pages: **28.9%** bounce rate\n• Contact page: **67.8%** bounce rate\n\n*Your blog content is particularly engaging to visitors.*"
-  }
-  
-  if (lowerInput.includes('conversion') || lowerInput.includes('goals')) {
-    return "🎯 **Conversion Analysis**\n\n• **Overall conversion rate**: 3.2%\n\n• **Best converting age group**: 25-34 (**4.1%**)\n\n**By page:**\n\n• Products page: **5.8%** conversion rate\n• Homepage: **3.1%** conversion rate\n• Blog posts: **1.9%** conversion rate\n\n**By traffic source:**\n\n• Email campaigns: **4.2%**\n• Organic search: **3.8%**\n• Social media: **2.1%**"
-  }
-  
-  if (lowerInput.includes('page') || lowerInput.includes('content')) {
-    return "📄 **Top Performing Pages**\n\n1. **Homepage** - 15,234 views\n\n2. **Products** - 8,945 views\n\n3. **About** - 6,723 views\n\n4. **Blog Posts** - 5,432 views\n\n5. **Contact** - 3,210 views\n\n**Blog Performance:**\n\n• Average time on page: **4 min 45 sec**\n• Strong engagement with technical content\n• *Consider expanding your blog strategy*"
-  }
-  
-  if (lowerInput.includes('source') || lowerInput.includes('referral')) {
-    return "🌐 **Traffic Sources Breakdown**\n\n• **Organic Search**: 45.2%\n\n• **Direct**: 28.7%\n\n• **Social Media**: 12.4%\n\n• **Referral**: 8.9%\n\n• **Email**: 4.8%\n\n**Top Referrers:**\n\n1. **Google** - 38% of total traffic\n\n2. **Facebook** - 8.2%\n\n3. **LinkedIn** - 3.1%\n\n4. **Twitter** - 1.1%\n\n*Your SEO strategy is working well!*"
-  }
-  
-  return "🤖 I can help you analyze various aspects of your Google Analytics data:\n\n• **Traffic patterns** and visitor trends\n• **User behavior** and engagement\n• **Conversion rates** and goals\n• **Audience demographics**\n\nCould you be more specific about what you'd like to know?"
-}

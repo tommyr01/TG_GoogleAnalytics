@@ -1,7 +1,15 @@
 "use client"
 
-import { ExternalLink } from "lucide-react"
+import { AlertTriangle, ExternalLink, HelpCircle, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
+import { Skeleton } from "@/registry/new-york-v4/ui/skeleton"
+import { Alert, AlertDescription } from "@/registry/new-york-v4/ui/alert"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/registry/new-york-v4/ui/tooltip"
 import {
   Table,
   TableBody,
@@ -19,63 +27,125 @@ interface TopPagesTableProps {
     avgTimeOnPage: string
     bounceRate: string
   }>
+  isLoading?: boolean
+  error?: string | null
 }
 
-export function TopPagesTable({ data }: TopPagesTableProps) {
-  // Mock data if none provided
-  const defaultData = [
-    {
-      page: "/",
-      pageViews: 15234,
-      uniqueViews: 12891,
-      avgTimeOnPage: "2:34",
-      bounceRate: "45.2%",
-    },
-    {
-      page: "/products",
-      pageViews: 8945,
-      uniqueViews: 7234,
-      avgTimeOnPage: "1:56",
-      bounceRate: "38.7%",
-    },
-    {
-      page: "/about",
-      pageViews: 6723,
-      uniqueViews: 5901,
-      avgTimeOnPage: "3:12",
-      bounceRate: "29.4%",
-    },
-    {
-      page: "/contact",
-      pageViews: 4567,
-      uniqueViews: 4123,
-      avgTimeOnPage: "1:23",
-      bounceRate: "67.8%",
-    },
-    {
-      page: "/blog",
-      pageViews: 3456,
-      uniqueViews: 3001,
-      avgTimeOnPage: "4:45",
-      bounceRate: "23.1%",
-    },
-    {
-      page: "/pricing",
-      pageViews: 2789,
-      uniqueViews: 2456,
-      avgTimeOnPage: "2:01",
-      bounceRate: "41.6%",
-    },
-  ]
+export function TopPagesTable({ data, isLoading = false, error }: TopPagesTableProps) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Skeleton className="size-3 rounded-full" />
+            <Skeleton className="h-5 w-24" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Page</TableHead>
+                <TableHead className="text-right">Page Views</TableHead>
+                <TableHead className="text-right">Unique Views</TableHead>
+                <TableHead className="text-right">Avg. Time</TableHead>
+                <TableHead className="text-right">Bounce Rate</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {Array.from({ length: 6 }).map((_, index) => (
+                <TableRow key={index}>
+                  <TableCell><Skeleton className="h-4 w-24" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-4 w-16 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+                  <TableCell className="text-right"><Skeleton className="h-4 w-12 ml-auto" /></TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    )
+  }
 
-  const tableData = data || defaultData
+  // Error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-red-500" />
+            Top Pages
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="border-red-200">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-700">
+              Failed to load page data. Please check your connection and try again.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    )
+  }
 
+  // No data available state
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-muted" />
+            <span>Top Pages</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p>Most visited pages on your website with engagement metrics</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[200px] flex items-center justify-center border border-dashed border-muted-foreground/25 rounded-lg">
+            <div className="text-center text-muted-foreground space-y-3">
+              <Info className="size-8 mx-auto text-muted-foreground/50" />
+              <div>
+                <p className="font-medium">No Page Data Available</p>
+                <p className="text-sm mt-1">
+                  for the selected date range
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Data available - show table
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <div className="size-3 rounded-full bg-teal-600" />
-          Top Pages
+          <span>Top Pages</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>Most visited pages with page views, unique visitors, time spent, and bounce rates</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -90,7 +160,7 @@ export function TopPagesTable({ data }: TopPagesTableProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {tableData.map((row, index) => (
+            {data.map((row, index) => (
               <TableRow key={index} className="hover:bg-muted/50">
                 <TableCell className="font-medium">
                   <div className="flex items-center gap-2">
@@ -122,6 +192,9 @@ export function TopPagesTable({ data }: TopPagesTableProps) {
             ))}
           </TableBody>
         </Table>
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          Real-time GA4 page data
+        </div>
       </CardContent>
     </Card>
   )

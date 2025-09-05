@@ -1,13 +1,22 @@
 "use client"
 
+import { AlertTriangle, HelpCircle, Info } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
+import { Skeleton } from "@/registry/new-york-v4/ui/skeleton"
+import { Alert, AlertDescription } from "@/registry/new-york-v4/ui/alert"
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/registry/new-york-v4/ui/tooltip"
 import { 
   LineChart, 
   Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
-  Tooltip, 
+  Tooltip as RechartsTooltip, 
   ResponsiveContainer 
 } from "recharts"
 
@@ -16,42 +25,117 @@ interface TrafficChartProps {
     date: string
     users: number
     pageViews: number
+    sessions: number
   }>
+  isLoading?: boolean
+  error?: string | null
 }
 
-export function TrafficChart({ data }: TrafficChartProps) {
-  // Mock data if none provided
-  const defaultData = [
-    { date: "Jan 1", users: 2400, pageViews: 4800 },
-    { date: "Jan 2", users: 1398, pageViews: 3200 },
-    { date: "Jan 3", users: 9800, pageViews: 15600 },
-    { date: "Jan 4", users: 3908, pageViews: 7200 },
-    { date: "Jan 5", users: 4800, pageViews: 9800 },
-    { date: "Jan 6", users: 3800, pageViews: 8900 },
-    { date: "Jan 7", users: 4300, pageViews: 10200 },
-    { date: "Jan 8", users: 2400, pageViews: 4800 },
-    { date: "Jan 9", users: 1398, pageViews: 3200 },
-    { date: "Jan 10", users: 5800, pageViews: 12600 },
-    { date: "Jan 11", users: 3908, pageViews: 7200 },
-    { date: "Jan 12", users: 4800, pageViews: 9800 },
-    { date: "Jan 13", users: 6800, pageViews: 13900 },
-    { date: "Jan 14", users: 7300, pageViews: 15200 },
-  ]
+export function TrafficChart({ data, isLoading = false, error }: TrafficChartProps) {
+  // Loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Skeleton className="size-3 rounded-full" />
+            <Skeleton className="h-5 w-32" />
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center">
+            <div className="text-center space-y-2">
+              <Skeleton className="h-4 w-48 mx-auto" />
+              <Skeleton className="h-4 w-36 mx-auto" />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
 
-  const chartData = data || defaultData
+  // Error state
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-red-500" />
+            Website Traffic
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert className="border-red-200">
+            <AlertTriangle className="h-4 w-4 text-red-500" />
+            <AlertDescription className="text-red-700">
+              Failed to load traffic data. Please check your connection and try again.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    )
+  }
 
+  // No data available state
+  if (!data || data.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-muted" />
+            <span>Website Traffic</span>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs">
+                  <p>Daily traffic trends showing users, sessions, and page views over time</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px] flex items-center justify-center border border-dashed border-muted-foreground/25 rounded-lg">
+            <div className="text-center text-muted-foreground space-y-3">
+              <Info className="size-8 mx-auto text-muted-foreground/50" />
+              <div>
+                <p className="font-medium">No Traffic Data Available</p>
+                <p className="text-sm mt-1">
+                  for the selected date range
+                </p>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  // Data available - show chart
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <div className="size-3 rounded-full bg-teal-600" />
-          Website Traffic
+          <span>Website Traffic</span>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>Daily traffic trends showing users, sessions, and page views from your website</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
+            <LineChart data={data}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis 
                 dataKey="date" 
@@ -62,7 +146,7 @@ export function TrafficChart({ data }: TrafficChartProps) {
                 className="text-xs text-muted-foreground"
                 tick={{ fontSize: 12 }}
               />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{
                   backgroundColor: 'hsl(var(--card))',
                   border: '1px solid hsl(var(--border))',
@@ -88,8 +172,20 @@ export function TrafficChart({ data }: TrafficChartProps) {
                 activeDot={{ r: 6, fill: "#14b8a6" }}
                 name="Page Views"
               />
+              <Line
+                type="monotone"
+                dataKey="sessions"
+                stroke="#2dd4bf"
+                strokeWidth={2}
+                dot={{ fill: "#2dd4bf", strokeWidth: 2, r: 4 }}
+                activeDot={{ r: 6, fill: "#2dd4bf" }}
+                name="Sessions"
+              />
             </LineChart>
           </ResponsiveContainer>
+        </div>
+        <div className="mt-2 text-xs text-muted-foreground text-center">
+          Traffic trends for selected period
         </div>
       </CardContent>
     </Card>

@@ -9,49 +9,48 @@ import { DeviceChart } from "@/components/analytics/device-chart"
 import { useAnalytics } from "@/hooks/use-analytics"
 
 export default function AnalyticsPage() {
-  const { data, isLoading, error } = useAnalytics()
-
-  if (isLoading) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <div className="size-12 border-4 border-teal-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading analytics data...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-full items-center justify-center">
-        <div className="text-center">
-          <p className="text-destructive font-semibold mb-2">Failed to load analytics data</p>
-          <p className="text-muted-foreground text-sm">{error}</p>
-        </div>
-      </div>
-    )
-  }
+  const { data, isLoading, error, isConnected } = useAnalytics()
 
   return (
     <div className="flex flex-col space-y-6 p-6">
       <AnalyticsHeader 
         title="Analytics Overview" 
         description="Comprehensive view of your website performance and user engagement"
+        isConnected={isConnected}
       />
       
-      <MetricsCards data={data?.overview} />
+      <MetricsCards 
+        data={data?.overview} 
+        isLoading={isLoading} 
+        error={error} 
+      />
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TrafficChart data={data?.traffic} />
-        <AudienceChart data={data?.audience} />
+        <TrafficChart 
+          data={data?.traffic} 
+          isLoading={isLoading} 
+          error={error} 
+        />
+        <AudienceChart 
+          data={data?.audience} 
+          isLoading={isLoading} 
+          error={error} 
+        />
       </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <TopPagesTable data={data?.topPages} />
+          <TopPagesTable 
+            data={data?.topPages} 
+            isLoading={isLoading} 
+            error={error} 
+          />
         </div>
-        <DeviceChart data={data?.devices} />
+        <DeviceChart 
+          data={data?.devices} 
+          isLoading={isLoading} 
+          error={error} 
+        />
       </div>
     </div>
   )

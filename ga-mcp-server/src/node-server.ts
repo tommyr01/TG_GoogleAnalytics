@@ -67,6 +67,15 @@ function parseDateRange(range: string) {
     case '12months':
       startDate.setMonth(startDate.getMonth() - 12);
       break;
+    case '2years':
+      startDate.setFullYear(startDate.getFullYear() - 2);
+      break;
+    case '3years':
+      startDate.setFullYear(startDate.getFullYear() - 3);
+      break;
+    case 'alltime':
+      startDate.setFullYear(2020, 0, 1); // Start from 2020 for GA4 data
+      break;
     default:
       startDate.setDate(startDate.getDate() - 30);
   }
@@ -149,6 +158,53 @@ async function getTopPages(dateRange = '30days', limit = 10) {
   };
 }
 
+async function getBlogPages(dateRange = '30days', limit = 10) {
+  const { startDate, endDate } = parseDateRange(dateRange);
+  
+  const [response] = await analyticsClient.runReport({
+    property: `properties/${process.env.GA_PROPERTY_ID}`,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [
+      { name: 'pagePath' },
+      { name: 'pageTitle' },
+    ],
+    metrics: [
+      { name: 'screenPageViews' },
+      { name: 'activeUsers' },
+      { name: 'averageSessionDuration' },
+      { name: 'bounceRate' },
+    ],
+    dimensionFilter: {
+      filter: {
+        fieldName: 'pagePath',
+        stringFilter: {
+          matchType: 'BEGINS_WITH',
+          value: '/blog'
+        }
+      }
+    },
+    limit,
+    orderBys: [
+      {
+        metric: { metricName: 'screenPageViews' },
+        desc: true,
+      },
+    ],
+  });
+
+  return {
+    dateRange: { startDate, endDate },
+    blogPages: response.rows?.map(row => ({
+      path: row.dimensionValues?.[0]?.value || '',
+      title: row.dimensionValues?.[1]?.value || '',
+      views: parseInt(row.metricValues?.[0]?.value || '0'),
+      users: parseInt(row.metricValues?.[1]?.value || '0'),
+      avgDuration: parseFloat(row.metricValues?.[2]?.value || '0'),
+      bounceRate: parseFloat(row.metricValues?.[3]?.value || '0'),
+    })) || []
+  };
+}
+
 async function getTrafficSources(dateRange = '30days', limit = 10) {
   const { startDate, endDate } = parseDateRange(dateRange);
   
@@ -156,14 +212,13 @@ async function getTrafficSources(dateRange = '30days', limit = 10) {
     property: `properties/${process.env.GA_PROPERTY_ID}`,
     dateRanges: [{ startDate, endDate }],
     dimensions: [
-      { name: 'sessionSource' },
-      { name: 'sessionMedium' },
+      { name: 'sessionDefaultChannelGroup' },
     ],
     metrics: [
       { name: 'sessions' },
       { name: 'activeUsers' },
-      { name: 'newUsers' },
-      { name: 'bounceRate' },
+      { name: 'engagedSessions' },
+      { name: 'engagementRate' },
     ],
     limit,
     orderBys: [
@@ -178,11 +233,11 @@ async function getTrafficSources(dateRange = '30days', limit = 10) {
     dateRange: { startDate, endDate },
     sources: response.rows?.map(row => ({
       source: row.dimensionValues?.[0]?.value || '',
-      medium: row.dimensionValues?.[1]?.value || '',
+      medium: 'channel_group', // Indicate this is channel group data
       sessions: parseInt(row.metricValues?.[0]?.value || '0'),
       users: parseInt(row.metricValues?.[1]?.value || '0'),
-      newUsers: parseInt(row.metricValues?.[2]?.value || '0'),
-      bounceRate: parseFloat(row.metricValues?.[3]?.value || '0'),
+      engagedSessions: parseInt(row.metricValues?.[2]?.value || '0'),
+      engagementRate: parseFloat(row.metricValues?.[3]?.value || '0'),
     })) || []
   };
 }
@@ -251,6 +306,132 @@ async function getRealtimeUsers() {
   };
 }
 
+async function getDailyTraffic(dateRange = '14days') {
+  const { startDate, endDate } = parseDateRange(dateRange);
+  
+  const [response] = await analyticsClient.runReport({
+    property: `properties/${process.env.GA_PROPERTY_ID}`,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'date' }],
+    metrics: [
+      { name: 'activeUsers' },
+      { name: 'screenPageViews' },
+      { name: 'sessions' },
+    ],
+    orderBys: [
+      { dimension: { dimensionName: 'date' }, desc: false }
+    ],
+  });
+
+  return {
+    dateRange: { startDate, endDate },
+    dailyData: response.rows?.map(row => {
+      const rawDate = row.dimensionValues?.[0]?.value || '';
+      // Convert YYYYMMDD to readable format
+      const year = rawDate.substring(0, 4);
+      const month = rawDate.substring(4, 6);
+      const day = rawDate.substring(6, 8);
+      const date = new Date(`${year}-${month}-${day}`);
+      const formattedDate = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      return {
+        date: formattedDate,
+        rawDate,
+        users: parseInt(row.metricValues?.[0]?.value || '0'),
+        pageViews: parseInt(row.metricValues?.[1]?.value || '0'),
+        sessions: parseInt(row.metricValues?.[2]?.value || '0'),
+      };
+    }) || []
+  };
+}
+
+async function getDemographics(dateRange = '30days') {
+  const { startDate, endDate } = parseDateRange(dateRange);
+  
+  try {
+    // Try to get age demographics (requires Enhanced Ecommerce or Google Signals)
+    const [ageResponse] = await analyticsClient.runReport({
+      property: `properties/${process.env.GA_PROPERTY_ID}`,
+      dateRanges: [{ startDate, endDate }],
+      dimensions: [{ name: 'userAgeBracket' }],
+      metrics: [{ name: 'activeUsers' }],
+      orderBys: [
+        {
+          metric: { metricName: 'activeUsers' },
+          desc: true,
+        },
+      ],
+    });
+
+    const totalUsers = ageResponse.rows?.reduce(
+      (sum, row) => sum + parseInt(row.metricValues?.[0]?.value || '0'),
+      0
+    ) || 0;
+
+    const ageData = ageResponse.rows?.map(row => ({
+      ageGroup: row.dimensionValues?.[0]?.value || 'Unknown',
+      users: parseInt(row.metricValues?.[0]?.value || '0'),
+      percentage: totalUsers > 0 ? 
+        ((parseInt(row.metricValues?.[0]?.value || '0') / totalUsers) * 100) : 0,
+    })) || [];
+
+    return {
+      dateRange: { startDate, endDate },
+      demographics: {
+        age: ageData,
+        totalUsers,
+        hasData: ageData.length > 0,
+      }
+    };
+  } catch (error) {
+    // Demographics data might not be available (requires Enhanced Ecommerce or Google Signals)
+    console.warn('Demographics data not available:', error instanceof Error ? error.message : String(error));
+    
+    return {
+      dateRange: { startDate, endDate },
+      demographics: {
+        age: [],
+        totalUsers: 0,
+        hasData: false,
+        error: 'Demographics data requires Enhanced Ecommerce or Google Signals to be enabled'
+      }
+    };
+  }
+}
+
+// Geographic data fetching
+async function getGeography(dateRange = '30days', limit = 10) {
+  const { startDate, endDate } = parseDateRange(dateRange);
+  
+  const [response] = await analyticsClient.runReport({
+    property: `properties/${process.env.GA_PROPERTY_ID}`,
+    dateRanges: [{ startDate, endDate }],
+    dimensions: [{ name: 'country' }],
+    metrics: [{ name: 'activeUsers' }],
+    orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
+    limit,
+  });
+
+  const countries = response.rows?.map(row => {
+    const country = row.dimensionValues?.[0]?.value || 'Unknown';
+    const users = parseInt(row.metricValues?.[0]?.value || '0');
+    return { country, users };
+  }) || [];
+
+  const totalUsers = countries.reduce((sum, country) => sum + country.users, 0);
+
+  const countriesWithPercentage = countries.map(country => ({
+    ...country,
+    percentage: totalUsers > 0 ? parseFloat(((country.users / totalUsers) * 100).toFixed(1)) : 0
+  }));
+
+  return {
+    dateRange: { startDate, endDate },
+    countries: countriesWithPercentage,
+    totalUsers,
+  };
+}
+
 // Natural language query interpreter
 async function interpretQuery(question: string) {
   const systemPrompt = `You are a Google Analytics query interpreter. Convert natural language questions into specific data requests.
@@ -258,16 +439,20 @@ async function interpretQuery(question: string) {
 Available data types:
 - summary: Overall metrics (sessions, users, pageviews, bounce rate, etc.)
 - pages: Top pages with traffic data
+- blog: Specifically blog pages (/blog/* URLs only)
 - realtime: Current active users
 - traffic: Traffic sources and referrers
 - devices: Device and browser breakdown
 
 Respond with JSON only:
 {
-  "dataType": "summary|pages|realtime|traffic|devices",
-  "dateRange": "today|yesterday|7days|30days|90days|12months",
+  "dataType": "summary|pages|blog|realtime|traffic|devices",
+  "dateRange": "today|yesterday|7days|30days|90days|12months|2years|3years|alltime",
   "limit": number (optional, for list results)
-}`;
+}
+
+Important: If the question mentions "blog", "/blog", "blog pages", or "blog posts", use dataType "blog".
+If the question mentions "3 years", "all time", "ever", or similar, use the appropriate dateRange.`;
 
   const completion = await openaiClient.chat.completions.create({
     model: process.env.OPENAI_MODEL || 'gpt-3.5-turbo',
@@ -381,6 +566,21 @@ app.get('/api/pages', async (req, res) => {
   }
 });
 
+app.get('/api/blog', async (req, res) => {
+  try {
+    const dateRange = req.query.dateRange as string || '30days';
+    const limit = parseInt(req.query.limit as string || '10');
+    const data = await getBlogPages(dateRange, limit);
+    res.json(data);
+  } catch (error) {
+    console.error('Blog pages error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch blog pages',
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 app.get('/api/traffic', async (req, res) => {
   try {
     const dateRange = req.query.dateRange as string || '30days';
@@ -423,6 +623,49 @@ app.get('/api/realtime', async (req, res) => {
   }
 });
 
+app.get('/api/daily-traffic', async (req, res) => {
+  try {
+    const dateRange = req.query.dateRange as string || '14days';
+    const data = await getDailyTraffic(dateRange);
+    res.json(data);
+  } catch (error) {
+    console.error('Daily traffic error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch daily traffic data',
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+app.get('/api/demographics', async (req, res) => {
+  try {
+    const dateRange = req.query.dateRange as string || '30days';
+    const data = await getDemographics(dateRange);
+    res.json(data);
+  } catch (error) {
+    console.error('Demographics error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch demographics data',
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
+app.get('/api/geography', async (req, res) => {
+  try {
+    const dateRange = req.query.dateRange as string || '30days';
+    const limit = parseInt(req.query.limit as string) || 10;
+    const data = await getGeography(dateRange, limit);
+    res.json(data);
+  } catch (error) {
+    console.error('Geography error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch geography data',
+      message: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 app.post('/api/query', async (req, res) => {
   try {
     const { question } = req.body;
@@ -442,6 +685,9 @@ app.post('/api/query', async (req, res) => {
         break;
       case 'pages':
         data = await getTopPages(interpretation.dateRange, interpretation.limit || 10);
+        break;
+      case 'blog':
+        data = await getBlogPages(interpretation.dateRange, interpretation.limit || 10);
         break;
       case 'traffic':
         data = await getTrafficSources(interpretation.dateRange, interpretation.limit || 10);

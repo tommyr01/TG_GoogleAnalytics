@@ -2,6 +2,13 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
 import { 
+  Tooltip as UITooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/registry/new-york-v4/ui/tooltip"
+import { HelpCircle } from "lucide-react"
+import { 
   BarChart, 
   Bar, 
   XAxis, 
@@ -23,13 +30,22 @@ const pagePerformanceData = [
 
 export function PagePerformanceChart() {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <div className="size-3 rounded-full bg-teal-600" />
-          Page Load Time Analysis
-        </CardTitle>
-      </CardHeader>
+    <TooltipProvider>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <div className="size-3 rounded-full bg-teal-600" />
+            Page Load Time Analysis
+            <UITooltip>
+              <TooltipTrigger asChild>
+                <HelpCircle className="size-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent side="top" className="max-w-xs">
+                <p>Shows page load times for your most visited pages. Fast loading pages (under 2 seconds) provide better user experience and improved SEO rankings. The red line indicates the slow threshold.</p>
+              </TooltipContent>
+            </UITooltip>
+          </CardTitle>
+        </CardHeader>
       <CardContent>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
@@ -87,5 +103,6 @@ export function PagePerformanceChart() {
         </div>
       </CardContent>
     </Card>
+    </TooltipProvider>
   )
 }
