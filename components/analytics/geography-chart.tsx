@@ -71,7 +71,7 @@ export function GeographyChart() {
         
         const data = await response.json()
         
-        const transformedData: CountryData[] = data.countries.map((country: any) => ({
+        const transformedData: CountryData[] = data.countries.map((country: { country: string, users: number, percentage: number }) => ({
           country: country.country,
           users: country.users,
           percentage: country.percentage,
@@ -89,7 +89,7 @@ export function GeographyChart() {
     }
 
     fetchGeographyData()
-  }, [selectedRange, customRange, getEffectiveDateRange])
+  }, [selectedRange, customRange, getEffectiveDateRange, API_URL])
 
   return (
     <TooltipProvider>

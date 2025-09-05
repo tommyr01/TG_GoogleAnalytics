@@ -27,7 +27,7 @@ interface AnalyticsHeaderProps {
 }
 
 export function AnalyticsHeader({ title, description }: AnalyticsHeaderProps) {
-  const { selectedRange, setSelectedRange, customRange, setCustomRange, getDisplayLabel } = useDateRange()
+  const { setSelectedRange, customRange, setCustomRange, getDisplayLabel } = useDateRange()
   const [isCustomDialogOpen, setIsCustomDialogOpen] = useState(false)
   const [tempDateRange, setTempDateRange] = useState<DateRange>({
     from: customRange ? new Date(customRange.startDate) : undefined,

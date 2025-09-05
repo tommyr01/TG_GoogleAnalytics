@@ -78,7 +78,7 @@ export function DeviceMetrics() {
         // Aggregate device data by category
         const deviceMap = new Map<string, { users: number, sessions: number, bounces: number, totalBounceRate: number, sessionCount: number }>()
 
-        data.devices.forEach((device: any) => {
+        data.devices.forEach((device: { deviceCategory?: string, users?: number, sessions?: number, bounceRate?: number }) => {
           const category = device.deviceCategory || 'other'
           const users = device.users || 0
           const sessions = device.sessions || 0

@@ -94,7 +94,7 @@ export function RealTimeStats() {
     // Update every 30 seconds for real-time feel
     const interval = setInterval(fetchRealTimeData, 30000)
     return () => clearInterval(interval)
-  }, [isConnected])
+  }, [isConnected, API_URL])
 
   return (
     <TooltipProvider>
@@ -108,7 +108,7 @@ export function RealTimeStats() {
                 <HelpCircle className="size-4 text-muted-foreground cursor-help" />
               </TooltipTrigger>
               <TooltipContent side="top" className="max-w-xs">
-                <p>Live data showing current user activity on your website. These metrics update every 30 seconds to give you real-time insights into who's on your site right now and what they're doing.</p>
+                <p>Live data showing current user activity on your website. These metrics update every 30 seconds to give you real-time insights into who&apos;s on your site right now and what they&apos;re doing.</p>
               </TooltipContent>
             </Tooltip>
           </CardTitle>

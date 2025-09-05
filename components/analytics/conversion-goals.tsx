@@ -1,8 +1,7 @@
 "use client"
 
-import { Target, TrendingUp, DollarSign, Users, HelpCircle } from "lucide-react"
+import { Target, HelpCircle } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
-import { Progress } from "@/registry/new-york-v4/ui/progress"
 import { 
   Tooltip, 
   TooltipContent, 

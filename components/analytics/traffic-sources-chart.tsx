@@ -10,7 +10,6 @@ import {
   TooltipTrigger 
 } from "@/registry/new-york-v4/ui/tooltip"
 import { HelpCircle } from "lucide-react"
-import { useAnalytics } from "@/hooks/use-analytics"
 
 const COLORS = ['#0d9488', '#14b8a6', '#2dd4bf', '#5eead4', '#99f6e4']
 

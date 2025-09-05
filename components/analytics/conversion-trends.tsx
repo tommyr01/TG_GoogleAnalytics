@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/registry/new-york-v4/ui/card"
 import { 
   Tooltip as UITooltip, 
@@ -9,10 +9,8 @@ import {
   TooltipTrigger 
 } from "@/registry/new-york-v4/ui/tooltip"
 import { HelpCircle } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
-import { useDateRange } from "@/contexts/date-range-context"
 
-interface EngagementTrendData {
+export interface EngagementTrendData {
   date: string
   engagementRate: number
 }

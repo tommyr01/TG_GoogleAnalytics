@@ -155,7 +155,7 @@ export function AudienceChart({ data, isLoading = false, error }: AudienceChartP
                   borderRadius: 'var(--radius)',
                 }}
                 labelStyle={{ color: 'hsl(var(--foreground))' }}
-                formatter={(value: any, name: any, props: any) => [
+                formatter={(value: number, name: string, props: { payload: { ageRange: string } }) => [
                   `${value} users (${props.payload.percentage.toFixed(1)}%)`,
                   'Users'
                 ]}

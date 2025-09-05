@@ -153,7 +153,7 @@ export function DeviceChart({ data, isLoading = false, error }: DeviceChartProps
                   border: '1px solid hsl(var(--border))',
                   borderRadius: 'var(--radius)',
                 }}
-                formatter={(value: any, name: any, props: any) => [
+                formatter={(value: number, name: string, props: { payload: { percentage: number, device: string } }) => [
                   `${value} users (${props.payload.percentage}%)`,
                   props.payload.device
                 ]}

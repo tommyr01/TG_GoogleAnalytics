@@ -74,7 +74,7 @@ export function BrowserChart() {
         const browserMap = new Map<string, number>()
         let totalUsers = 0
 
-        data.devices.forEach((device: any) => {
+        data.devices.forEach((device: { browser?: string, users?: number }) => {
           const browserName = device.browser || '(not set)'
           const users = device.users || 0
           browserMap.set(browserName, (browserMap.get(browserName) || 0) + users)
@@ -102,7 +102,7 @@ export function BrowserChart() {
     }
 
     fetchBrowserData()
-  }, [dateRangeContext?.selectedRange])
+  }, [dateRangeContext?.selectedRange, API_URL])
 
   if (error) {
     return (
